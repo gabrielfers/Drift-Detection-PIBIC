@@ -1,4 +1,4 @@
-from sklearn import tree
+from river import tree
 from classes.superclasse.ModeloBase import ModeloBase
 
 class HoeffdingTreeRegressorModelo(ModeloBase):

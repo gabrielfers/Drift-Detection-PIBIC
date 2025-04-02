@@ -1,4 +1,4 @@
-from sklearn import linear_model
+from river import linear_model
 from classes.superclasse.ModeloBase import ModeloBase
 
 

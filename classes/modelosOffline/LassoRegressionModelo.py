@@ -1,4 +1,4 @@
-from matplotlib.widgets import Lasso
+from sklearn.linear_model import Lasso
 from classes.superclasse.ModeloBase import ModeloBase
 
 
