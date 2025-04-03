@@ -1,0 +1,33 @@
+{
+    "LinearRegressionModelo": {
+        "copy_X": "False",
+        "fit_intercept": "False",
+        "positive": "True"
+    },
+    "KNeighborsRegressorModelo": {
+        "n_neighbors": "5",
+        "p": "1",
+        "weights": "distance"
+    },
+    "LassoRegressionModelo": {
+        "alpha": "0.0019019408689644668",
+        "max_iter": "2000",
+        "tol": "1e-06"
+    },
+    "RandomForestModelo": {
+        "max_depth": "25",
+        "min_samples_leaf": "2",
+        "min_samples_split": "7",
+        "n_estimators": "170"
+    },
+    "RidgeRegressionModelo": {
+        "alpha": "0.013681734783709855",
+        "solver": "svd"
+    },
+    "SVRModelo": {
+        "C": "100.0",
+        "epsilon": "0.0674135203280247",
+        "gamma": "0.001",
+        "kernel": "linear"
+    }
+}

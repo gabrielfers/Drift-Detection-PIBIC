@@ -6,6 +6,7 @@ from classes.superclasse.ModeloBase import ModeloBase
 class LinearRegressionModelo(ModeloBase, BaseEstimator, RegressorMixin):
     def __init__(self):
         super().__init__()
+        self.__name__ = "LinearRegressionModelo"
         self.modelo = LinearRegression()
 
     def treinar(self, X, y):
