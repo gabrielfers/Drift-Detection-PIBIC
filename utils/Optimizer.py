@@ -76,6 +76,37 @@ class Optimizer:
             "PARegressorModelo": {
                 "C": Real(0.01, 10.0, prior='log-uniform'),
                 "mode": Integer(0, 2)
+            },
+
+            # Novos modelos online que estavam faltando
+            """
+            "BayesianLinearRegressionModelo": {
+                "alpha": Real(0.01, 100.0, prior='log-uniform'),
+                "beta": Real(0.01, 100.0, prior='log-uniform')
+            },
+            """
+
+            """
+            "HoeffdingTreeRegressorModelo": {
+                "grace_period": Integer(50, 200),
+                "split_confidence": Real(1e-10, 1e-1, prior='log-uniform'),
+                "leaf_prediction": Categorical(['mean', 'model']),
+                "max_depth": Integer(5, 50),
+                "memory_estimate_period": Integer(1000, 10000)
+            },
+            """
+
+            """
+            "KNNRegressorOnlineModelo": {
+                "n_neighbors": Integer(1, 20),
+                "window_size": Integer(100, 1000),
+                "min_distance": Real(0.0, 1.0)
+            },
+            """
+            "MLPRegressorOnlineModelo": {
+                "hidden_dims": Categorical([(10,), (20,), (50,), (10, 10), (20, 10)]),
+                "activations": Categorical([("ReLU",), ("Tanh",), ("ReLU", "ReLU"), ("Tanh", "Tanh")]),
+                "learning_rate": Real(0.0001, 0.1, prior='log-uniform')
             }
         }
 
