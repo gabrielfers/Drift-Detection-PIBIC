@@ -3,9 +3,9 @@ from classes.superclasse.ModeloBase import ModeloBase
 
 
 class KNeighborsRegressorModelo(ModeloBase):
-    def __init__(self, n_neighbors=10, weights="distance", metric="minkowski"):
+    def __init__(self, **kwargs):
         super().__init__()
-        self.modelo = KNeighborsRegressor(n_neighbors=n_neighbors, weights=weights, metric=metric)
+        self.modelo = KNeighborsRegressor(**kwargs)
 
     def treinar(self, X, y):
         self.modelo.fit(X, y)

@@ -2,9 +2,9 @@ from sklearn.linear_model import Ridge
 from classes.superclasse.ModeloBase import ModeloBase
 
 class RidgeRegressionModelo(ModeloBase):
-    def __init__(self, alpha=1.0, solver="auto"):
+    def __init__(self, **kwargs):
         super().__init__()
-        self.modelo = Ridge(alpha=alpha, solver=solver)
+        self.modelo = Ridge(**kwargs)
 
     def treinar(self, X, y):
         self.modelo.fit(X, y)

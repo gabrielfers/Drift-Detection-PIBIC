@@ -3,9 +3,9 @@ from classes.superclasse.ModeloBase import ModeloBase
 
 
 class LassoRegressionModelo(ModeloBase):
-    def __init__(self, alpha=0.01, max_iter=1000):
+    def __init__(self, **kwargs):
         super().__init__()
-        self.modelo = Lasso(alpha=alpha, max_iter=max_iter)
+        self.modelo = Lasso(**kwargs)
 
     def treinar(self, X, y):
         self.modelo.fit(X, y)

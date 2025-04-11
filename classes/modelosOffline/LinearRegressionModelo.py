@@ -4,10 +4,10 @@ from classes.superclasse.ModeloBase import ModeloBase
 
 
 class LinearRegressionModelo(ModeloBase, BaseEstimator, RegressorMixin):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
         self.__name__ = "LinearRegressionModelo"
-        self.modelo = LinearRegression()
+        self.modelo = LinearRegression(**kwargs)
 
     def treinar(self, X, y):
         """Treina o modelo usando os dados fornecidos."""

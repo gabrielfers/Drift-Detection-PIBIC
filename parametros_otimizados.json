@@ -5,29 +5,29 @@
         "positive": "True"
     },
     "KNeighborsRegressorModelo": {
-        "n_neighbors": "5",
+        "n_neighbors": "6",
         "p": "2",
         "weights": "distance"
     },
     "LassoRegressionModelo": {
-        "alpha": "0.0019068529385004493",
+        "alpha": "0.0019038278424277919",
         "max_iter": "2000",
         "tol": "1e-06"
     },
     "RandomForestModelo": {
-        "max_depth": "25",
-        "min_samples_leaf": "2",
-        "min_samples_split": "7",
-        "n_estimators": "170"
+        "max_depth": "6",
+        "min_samples_leaf": "1",
+        "min_samples_split": "8",
+        "n_estimators": "139"
     },
     "RidgeRegressionModelo": {
-        "alpha": "0.01864705843210268",
-        "solver": "lsqr"
+        "alpha": "0.010253943538922507",
+        "solver": "sparse_cg"
     },
     "SVRModelo": {
-        "C": "100.0",
-        "epsilon": "0.1298343538425315",
-        "gamma": "0.004567146520859279",
+        "C": "1.285304663052483",
+        "epsilon": "0.03598911150971763",
+        "gamma": "0.001",
         "kernel": "linear"
     }
 }
