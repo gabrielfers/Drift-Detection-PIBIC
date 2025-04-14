@@ -81,7 +81,7 @@ class DriftEvaluator:
         print(f"MAE Modelo Batch: {mae.get()}")
         print(f"Desvio Padrão dos Erros: {desvio_padrao}")
 
-        return predicoes, deteccoes
+        return predicoes, deteccoes, mae, desvio_padrao
 
     @staticmethod
     def prequential_passivo(X, Y, tamanho_batch, modelo_classe, **kwargs):

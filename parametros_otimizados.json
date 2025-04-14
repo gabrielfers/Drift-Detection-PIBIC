@@ -10,24 +10,24 @@
         "weights": "distance"
     },
     "LassoRegressionModelo": {
-        "alpha": "0.0019038278424277919",
+        "alpha": "0.0019054043789748995",
         "max_iter": "2000",
         "tol": "1e-06"
     },
     "RandomForestModelo": {
-        "max_depth": "6",
+        "max_depth": "5",
         "min_samples_leaf": "1",
         "min_samples_split": "8",
-        "n_estimators": "139"
+        "n_estimators": "59"
     },
     "RidgeRegressionModelo": {
-        "alpha": "0.010253943538922507",
-        "solver": "sparse_cg"
+        "alpha": "0.010010247671433766",
+        "solver": "lsqr"
     },
     "SVRModelo": {
-        "C": "1.285304663052483",
-        "epsilon": "0.03598911150971763",
-        "gamma": "0.001",
+        "C": "100.0",
+        "epsilon": "0.027686572223884997",
+        "gamma": "1.0",
         "kernel": "linear"
     }
 }
