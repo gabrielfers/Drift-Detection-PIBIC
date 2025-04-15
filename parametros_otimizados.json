@@ -15,9 +15,9 @@
         "tol": "1e-06"
     },
     "RandomForestModelo": {
-        "max_depth": "5",
-        "min_samples_leaf": "1",
-        "min_samples_split": "8",
+        "max_depth": "30",
+        "min_samples_leaf": "3",
+        "min_samples_split": "10",
         "n_estimators": "59"
     },
     "RidgeRegressionModelo": {

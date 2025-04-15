@@ -71,14 +71,14 @@ class Visualizer:
                 print(f"\nNenhum drift detectado para {label}.")
 
         plt.legend(fontsize=10, loc='upper left', bbox_to_anchor=(1, 1))
-        plt.title("Predições e Detecção de Drift com Retreino", fontsize=14)
+        plt.title("Predições e Detecção de Drift com Retreino variando os modelos fixando ADWIN", fontsize=14)
         plt.grid(True, alpha=0.4)
         plt.tight_layout()
 
         plt.show()
 
     @staticmethod
-    def plotar_resultados_multi(Y, lista_predicoes, labels_algoritmos, deteccoes_dict, tamanho_batch):
+    def plotar_resultados_multi(Y, lista_predicoes, labels_algoritmos, deteccoes_dict, tamanho_batch, detector_or_modelo):
         """
         Plota os resultados com múltiplas detecções.
 
@@ -136,7 +136,7 @@ class Visualizer:
                     print(f"\nNenhum drift detectado para {modelo_nome}.")
 
         plt.legend(fontsize=10, loc='upper left', bbox_to_anchor=(1, 1))
-        plt.title("Predições e Detecção de Drift com Retreino", fontsize=14)
+        plt.title(f"Predições e Detecção de Drift com Retreino variando os algoritmos de Detecção fixando {detector_or_modelo}", fontsize=14)
         plt.grid(True, alpha=0.4)
         plt.tight_layout()
 
