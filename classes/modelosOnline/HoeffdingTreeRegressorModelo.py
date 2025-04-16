@@ -2,9 +2,9 @@ from river import tree
 from classes.superclasse.ModeloBase import ModeloBase
 
 class HoeffdingTreeRegressorModelo(ModeloBase):
-    def __init__(self, grace_period=50, leaf_prediction="adaptive"):
+    def __init__(self, grace_period=100, leaf_prediction="adaptive"):
         super().__init__()
-        self.modelo = tree.HoeffdingTreeRegressor(grace_period=grace_period, leaf_prediction=leaf_prediction)
+        self.modelo = tree.HoeffdingTreeRegressor()
 
     def treinar(self, X, y):
         for i in range(len(X)):
@@ -13,4 +13,4 @@ class HoeffdingTreeRegressorModelo(ModeloBase):
 
     def prever(self, X):
         X_dict = {f"t{i+1}": value for i, value in enumerate(X[0])}
-        return self.modelo.predict_one(X_dict)  # Retorna o valor escalar diretamente
+        return self.modelo.predict_one(X_dict)

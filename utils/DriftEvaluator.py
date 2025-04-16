@@ -28,17 +28,14 @@ class DriftEvaluator:
         predicoes, erros, deteccoes = [], [], []
         mae = metrics.MAE()
 
-        # Inicializando o modelo e o detector usando as classes
         modelo, detector = ModelTrainer.inicializar_modelos(modelo_classe, detector_classe, **kwargs)
 
-        # Treina o modelo e atualiza o detector
         erro_inicial = ModelTrainer.treinamento_modelo_batch(modelo, X[:tamanho_batch], Y[:tamanho_batch])
-        detector.atualizar(erro_inicial)  # Usa o método 'atualizar' da subclasse
+        detector.atualizar(erro_inicial)
 
         drift_ativo = False
 
         for i in range(tamanho_batch, len(X)):
-            # Realiza a predição usando o método 'prever' da subclasse
             entrada = X[i].reshape(1, -1)
             y_pred = modelo.prever(entrada)[0]
             erro = abs(Y[i][0] - y_pred)
@@ -47,17 +44,14 @@ class DriftEvaluator:
             erros.append(erro)
             mae.update(Y[i][0], y_pred)
 
-            # Atualiza o detector usando o método 'atualizar' da subclasse
             detector.atualizar(erro)
 
-            # Se drift for detectado pela primeira vez
-            if detector.drift_detectado and not drift_ativo:  # Usa a propriedade 'drift_detectado'
+            if detector.drift_detectado and not drift_ativo:
                 deteccoes.append(i)
                 print(f"\nMudança detectada no índice {i}, começando a coletar dados para retreino...")
                 drift_ativo = True
                 janela_X, janela_y = [], []
 
-            # Se drift já foi detectado, inicia-se a coleta dos dados
             if drift_ativo:
                 janela_X.append(X[i])
                 janela_y.append(Y[i])
@@ -66,14 +60,11 @@ class DriftEvaluator:
                     print(f"Janela completa com {len(janela_X)} amostras. Retreinado com dados do índice {i - tamanho_batch} até {i}.")
                     drift_ativo = False
 
-                    # Inicializando o modelo e o detector com novas instâncias
                     modelo, detector = ModelTrainer.inicializar_modelos(modelo_classe, detector_classe, **kwargs)
 
-                    # Treina o modelo e atualiza o detector
                     erro_inicial = ModelTrainer.treinamento_modelo_batch(modelo, np.array(janela_X), np.array(janela_y))
-                    detector.atualizar(erro_inicial)  # Usa o método 'atualizar' da subclasse
+                    detector.atualizar(erro_inicial)
 
-        # Calculando o desvio padrão dos erros com NumPy
         desvio_padrao = np.std(erros)
 
         print("Modelo utilizado:", modelo)
@@ -99,28 +90,26 @@ class DriftEvaluator:
         Returns:
             predicoes: Lista de previsões.
         """
-        predicoes = []
+        predicoes, erros = [], []
         mae = metrics.MAE()
 
-        # Inicializa o modelo usando a classe e kwargs
         modelo = modelo_classe(**kwargs)
 
-        # Treina o modelo com os primeiros exemplos usando treinamento_online_many
         modelo = ModelTrainer.treinamento_online_many(modelo, X, Y, tamanho_batch)
 
         for i in range(tamanho_batch, len(X)):
-            # Converte a entrada para o formato que o modelo online espera
             entrada_dict = {f"t{j+1}": value for j, value in enumerate(X[i])}
 
-            # Realiza a predição usando o método 'prever' da subclasse
-            y_pred = modelo.prever([X[i]])  # Passa a entrada como uma lista de uma única amostra
+            y_pred = modelo.prever([X[i]])
+            erro = abs(Y[i][0] - y_pred)
 
             predicoes.append(y_pred)
             mae.update(Y[i][0], y_pred)
+            erros.append(erro)
 
-            # Atualiza o modelo online usando o método 'treinar' da subclasse
             modelo.treinar([X[i]], [Y[i]])
 
+        desvio_padrao = np.std(erros)
         print("Modelo utilizado:", modelo)
         print(f"MAE Modelo Online: {mae.get()}")
-        return predicoes
+        return predicoes, mae, desvio_padrao

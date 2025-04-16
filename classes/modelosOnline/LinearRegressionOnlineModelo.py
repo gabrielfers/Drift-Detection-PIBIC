@@ -12,5 +12,5 @@ class LinearRegressionOnlineModelo(ModeloBase):
             self.modelo.learn_one(X_dict, y[j][0])
 
     def prever(self, X):
-        X_dict = {f"t{j+1}": value for j, value in enumerate(X[0])}  # Converte X[0] em dicionário
+        X_dict = {f"t{j+1}": value for j, value in enumerate(X[0])}
         return self.modelo.predict_one(X_dict)
