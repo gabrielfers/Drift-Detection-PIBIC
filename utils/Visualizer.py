@@ -7,7 +7,7 @@ class Visualizer:
     """
 
     @staticmethod
-    def plotar_resultados(Y, lista_predicoes, labels_algoritmos, deteccoes_por_modelo, tamanho_batch):
+    def plotar_resultados(Y, lista_predicoes, labels_algoritmos, deteccoes_por_modelo, tamanho_batch, titulo_plot):
         """
         Plota os resultados de predição e detecção de drift.
 
@@ -71,7 +71,7 @@ class Visualizer:
                 print(f"\nNenhum drift detectado para {label}.")
 
         plt.legend(fontsize=10, loc='upper left', bbox_to_anchor=(1, 1))
-        plt.title("Predições e Detecção de Drift com Retreino variando os modelos fixando ADWIN", fontsize=14)
+        plt.title(f"{titulo_plot}", fontsize=14)
         plt.grid(True, alpha=0.4)
         plt.tight_layout()
 
