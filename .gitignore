@@ -11,3 +11,7 @@ parametros_otimizados.json
 
 # Ignorar arquivos CSV
 *.csv
+
+venv/
+
+.venv/
