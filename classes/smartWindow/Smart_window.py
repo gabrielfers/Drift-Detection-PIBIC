@@ -2,7 +2,8 @@ from collections import deque
 from fastdtw import fastdtw
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression  # Exemplo de regressor
+from sklearn.linear_model import LinearRegression
+import copy 
 
 class SmartWindow:
     def __init__(self, tam_janela=50, max_janelas=3, limiar_drift=0.5, limiar_dtw=30, modelo=None):
@@ -15,6 +16,7 @@ class SmartWindow:
             limiar_drift (float): MAE mínimo para sinalizar drift.
             limiar_dtw (float): Distância DTW máxima para manter janela.
             modelo: Modelo de regressão (ou outro) a ser usado. Usa LinearRegression se None.
+                     Uma cópia profunda do modelo será criada.
         """
         self.TAM_JANELA = tam_janela
         self.MAX_JANELAS = max_janelas
@@ -23,7 +25,14 @@ class SmartWindow:
 
         self.buffer = deque(maxlen=self.TAM_JANELA)
         self.janelas = []  # lista de tuplas: (DataFrame, vetor_erro)
-        self.modelo = modelo if modelo is not None else LinearRegression()
+
+        if modelo is not None:
+            self._modelo_inicial = copy.deepcopy(modelo)
+            self.modelo = copy.deepcopy(modelo)
+        else:
+            # Se nenhum modelo for fornecido, cria um novo LinearRegression
+            self._modelo_inicial = LinearRegression()
+            self.modelo = LinearRegression()
 
     def _extrair_xy(self, df):
         """Retorna X (features) e y (target) de um DataFrame."""
@@ -45,6 +54,21 @@ class SmartWindow:
         """Calcula e retorna a distância DTW entre dois vetores de erro."""
         distance, _ = fastdtw(e_antigo, e_novo)
         return distance
+
+    def _train_model(self, X, y):
+        """Treina o modelo com os dados fornecidos (assume interface scikit-learn)."""
+        if hasattr(self.modelo, 'fit'):
+            # Assume interface scikit-learn para modelos offline/batch
+            self.modelo.fit(X, y)
+        else:
+            raise AttributeError("O modelo fornecido não possui um método 'fit' reconhecido.")
+
+    def _predict_batch(self, X):
+        """Faz predições em batch (assume interface scikit-learn)."""
+        if hasattr(self.modelo, 'predict'):
+             return self.modelo.predict(X) # Para sklearn ou outros
+        else:
+            raise AttributeError("O modelo fornecido não possui um método 'predict' reconhecido.")
 
     def processar_ponto(self, x_i, y_i):
         """
@@ -75,15 +99,14 @@ class SmartWindow:
 
         # 3) Se for a primeira janela, faz o treinamento inicial
         if not self.janelas:
-            self.modelo.fit(Xn, yn)
-            # Calcula o erro da primeira janela após o treino inicial
-            y_pred_inicial = self.modelo.predict(Xn)
+            self._train_model(Xn, yn)
+            y_pred_inicial = self._predict_batch(Xn)
             erro_inicial = self._calcular_erro(yn, y_pred_inicial)
             self.janelas.append((window_df.copy(), erro_inicial))
-            return False # Não há drift na primeira janela
+            return False
 
-        # Calcula predição e erro para a janela atual ANTES de qualquer retreino
-        y_pred = self.modelo.predict(Xn)
+        # Calcula predição e erro para a janela atual usando o modelo atual (antes do retreino)
+        y_pred = self._predict_batch(Xn)
         erro_novo = self._calcular_erro(yn, y_pred)
 
         drift_detectado = False
@@ -104,12 +127,11 @@ class SmartWindow:
                 combinado = window_df # Se nenhuma janela antiga for válida, treina só com a nova
 
             Xc, yc = self._extrair_xy(combinado)
-            self.modelo.fit(Xc, yc)
+            self._train_model(Xc, yc) # Retreina o modelo
 
             # Recalcula o erro da janela atual com o modelo retreinado para armazenar
-            y_pred_retreinado = self.modelo.predict(Xn)
-            erro_novo = self._calcular_erro(yn, y_pred_retreinado)
-
+            y_pred_retreinado = self._predict_batch(Xn)
+            erro_novo = self._calcular_erro(yn, y_pred_retreinado) # Atualiza o erro com o modelo novo
 
         # 7) Atualiza lista de janelas (FIFO)
         self.janelas.append((window_df.copy(), erro_novo))
@@ -117,3 +139,14 @@ class SmartWindow:
             self.janelas.pop(0)
 
         return drift_detectado
+
+    def reset(self):
+        """
+        Reseta o estado da SmartWindow para o estado inicial.
+        Limpa o buffer, as janelas armazenadas e reinstancia o modelo
+        usando uma cópia profunda do modelo inicial.
+        """
+        self.buffer.clear()
+        self.janelas = []
+        # Reinstancia o modelo usando uma cópia profunda do modelo inicial armazenado
+        self.modelo = copy.deepcopy(self._modelo_inicial)
