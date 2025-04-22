@@ -1,8 +1,0 @@
-Detector,MAE_Medio,Std_Dev_Medio,Numero_Deteccoes
-ADWINDetector,0.434683,0.482186,3
-EDDMDetector,1.727031,0.863153,0
-FHDDMDetector,0.782997,0.683258,3
-HDDM_ADetector,0.394067,0.422248,6
-PageHinkleyDetector,0.494420,0.486774,2
-HDDM_WDetector,0.450964,0.427683,4
-KSWINDetector,0.369295,0.422221,8
