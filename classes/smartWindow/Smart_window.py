@@ -93,11 +93,11 @@ class SmartWindow:
             # 5) Filtra janelas antigas via DTW entre vetores de erro
             janelas_validas_dfs = []
             for old_df, erro_antigo in self.janelas:
-                if self._calcular_dtw(erro_antigo, erro_novo) < self.LIMIAR_DTW:
+                dist_dtw = self._calcular_dtw(erro_antigo, erro_novo)
+                if dist_dtw < self.LIMIAR_DTW:
                     janelas_validas_dfs.append(old_df)
 
             # 6) Re-treina o modelo com janelas válidas + a nova
-            # Garante que apenas DataFrames válidos sejam concatenados
             if janelas_validas_dfs:
                 combinado = pd.concat(janelas_validas_dfs + [window_df], ignore_index=True)
             else:
