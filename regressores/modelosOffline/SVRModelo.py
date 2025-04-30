@@ -1,0 +1,13 @@
+from sklearn.svm import SVR
+from regressores.ModeloBase import ModeloBase
+
+class SVRModelo(ModeloBase):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.modelo = SVR(**kwargs)
+
+    def treinar(self, X, y):
+        self.modelo.fit(X, y)
+
+    def prever(self, X):
+        return self.modelo.predict(X)
