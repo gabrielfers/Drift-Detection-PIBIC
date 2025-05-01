@@ -5,6 +5,7 @@ class DDMDetector(DetectorDriftBase):
     def __init__(self, threshold=0.05):
         super().__init__()
         self.detector = DDM()
+        self.name = "_DDM"
         self.threshold = threshold
 
     def atualizar(self, erro):
