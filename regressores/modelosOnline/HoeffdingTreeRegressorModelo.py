@@ -5,6 +5,7 @@ class HoeffdingTreeRegressorModelo(ModeloBase):
     def __init__(self, grace_period=100, leaf_prediction="adaptive"):
         super().__init__()
         self.modelo = tree.HoeffdingTreeRegressor()
+        self.name = "Hoff_Tree"
 
     def treinar(self, X, y):
         for i in range(len(X)):

@@ -5,6 +5,7 @@ class ADWINDetector(DetectorDriftBase):
     def __init__(self):
         super().__init__()
         self.detector = ADWIN()
+        self.name = "_ADWIN"
 
     def atualizar(self, erro):
         self.detector.update(erro)

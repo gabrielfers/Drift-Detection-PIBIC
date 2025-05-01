@@ -5,6 +5,7 @@ class EDDMDetector(DetectorDriftBase):
     def __init__(self):
         super().__init__()
         self.detector = EDDM()
+        self.name = "_EDDM"
 
     def atualizar(self, erro):
         self.detector.update(erro)

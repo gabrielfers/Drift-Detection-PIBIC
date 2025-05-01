@@ -5,6 +5,7 @@ class FHDDMDetector(DetectorDriftBase):
     def __init__(self):
         super().__init__()
         self.detector = FHDDM()
+        self.name = "_FHDDM"
 
     def atualizar(self, erro):
         self.detector.update(erro)

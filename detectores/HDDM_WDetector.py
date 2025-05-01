@@ -6,6 +6,7 @@ class HDDM_WDetector(DetectorDriftBase):
     def __init__(self):
         super().__init__()
         self.detector = HDDM_W()
+        self.name = "_HDDMw"
 
     def atualizar(self, erro):
         self.detector.update(erro)

@@ -5,6 +5,7 @@ class BayesianLinearRegressionModelo(ModeloBase):
     def __init__(self):
         super().__init__()
         self.modelo = linear_model.BayesianLinearRegression()
+        self.name = "Bayesian_Linear_Online"
 
     def treinar(self, X, y):
         for i in range(len(X)):

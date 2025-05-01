@@ -1,5 +1,7 @@
 import numpy as np
 from river import metrics
+from sklearn.metrics import mean_absolute_error
+
 
 class DriftEvaluator:
     """
@@ -20,7 +22,7 @@ class DriftEvaluator:
         """
         # Instancia o modelo com os parâmetros fornecidos
         modelo_instancia = modelo_classe()
-
+        
         # Instancia o detector com os parâmetros fornecidos
         detector_instancia = detector_classe()
 
@@ -84,14 +86,14 @@ class DriftEvaluator:
                 
             # recebimento do dado de entrada e computacao da previsao
             entrada = X[i].reshape(1, -1)
-            y_pred = modelo.prever(entrada)[0]
-            erro = abs(Y[i][0] - y_pred)
+            y_pred = modelo.prever(entrada)
+            erro = mean_absolute_error(Y[i], y_pred)
 
 
             # salvando os resultados
             predicoes.append(y_pred)
             erros.append(erro)
-            mae.update(Y[i][0], y_pred)
+            mae.update(Y[i][0], y_pred[0])
 
 
             # atualizando o detector
@@ -120,12 +122,13 @@ class DriftEvaluator:
                     erro_inicial = DriftEvaluator.treinamento_modelo_batch(modelo, np.array(janela_X), np.array(janela_y))
                     detector.atualizar(erro_inicial)
 
-        print("Modelo utilizado:", modelo)
-        print("Detector utilizado:", detector)
-        print(f"MAE Modelo Batch: {mae.get()}")
+        #print("Modelo utilizado:", modelo)
+        #print("Detector utilizado:", detector)
+        #print("Detecções:", deteccoes)
+        #print(f"MAE Modelo Batch: {mae.get()}")
         
-        return predicoes, deteccoes, mae
-
+        return [float(p.flatten()[0]) for p in predicoes], deteccoes, mae.get()
+    
     @staticmethod
     def prequential_passivo(X, Y, tamanho_batch, modelo_classe):
         """
@@ -158,7 +161,7 @@ class DriftEvaluator:
             
             # recebimento do dado de entrada e computacao da previsao
             y_pred = modelo.prever([X[i]])
-            erro = abs(Y[i][0] - y_pred)
+            erro = mean_absolute_error(Y[i], np.array([y_pred]))
 
 
             # salvando os resultados
@@ -171,6 +174,6 @@ class DriftEvaluator:
             modelo.treinar([X[i]], [Y[i]])
 
         
-        print("Modelo utilizado:", modelo)
-        print(f"MAE Modelo Online: {mae.get()}")
-        return predicoes, mae
+        #print("Modelo utilizado:", modelo)
+        #print(f"MAE Modelo Online: {mae.get()}")
+        return [float(p.flatten()[0]) for p in predicoes], mae.get()
