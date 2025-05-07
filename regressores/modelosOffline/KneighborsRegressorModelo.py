@@ -1,9 +1,9 @@
 from sklearn.neighbors import KNeighborsRegressor
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloAtivo
 from utils.FileManager import FileManager
 
 
-class KneighborsRegressorModelo(ModeloBase):
+class KneighborsRegressorModelo(ModeloAtivo):
     def __init__(self, **kwargs):
         super().__init__()
         self.name = "KNeighborsRegressor"  # Define o nome para carregar parâmetros
@@ -14,9 +14,3 @@ class KneighborsRegressorModelo(ModeloBase):
 
         # Cria o modelo com os parâmetros (se fornecidos ou do JSON)
         self.modelo = KNeighborsRegressor(**kwargs)
-
-    def treinar(self, X, y):
-        self.modelo.fit(X, y)
-
-    def prever(self, X):
-        return self.modelo.predict(X)

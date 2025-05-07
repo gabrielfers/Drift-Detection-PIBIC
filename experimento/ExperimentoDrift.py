@@ -14,53 +14,140 @@ class Experimento:
         Baixa, normaliza e transforma uma série temporal em janelas X e Y.
         """
         
-        serie = SeriesProcessor.baixar_dados(nome_serie)
+        serie = SeriesProcessor.carregar_serie_csv(nome_serie)
         serie = SeriesProcessor.normalizar_serie(serie)
         X, Y = SeriesProcessor.criar_janela_temporal(serie, self.lags)
                 
         return X, Y
 
+    def executar2(self):
+        """
+        Executa cada modelo N vezes para cada uma das séries
+        """
+        resultados = []
+        cache_modelos_deterministicos = {}
+        
+        modelos_deterministicos = {
+            "LinearRegressionModelo",
+            "KneighborsRegressorModelo",
+            "LassoRegressionModelo",
+            "RidgeRegressionModelo",
+            "SVRModelo"
+        }
+
+        for nome_serie in self.series:
+            X, Y = self.preprocessar_serie(nome_serie)
+
+            for modelo_cfg in self.modelos:
+                nome_modelo = modelo_cfg["nome"]
+                avaliador = modelo_cfg["avaliador"]
+                modelo = modelo_cfg["modelo"]
+                detector = modelo_cfg.get("detector")
+
+                print(f"Executando {nome_modelo} na série: {nome_serie}")
+
+                is_deterministico = modelo.__name__ in modelos_deterministicos
+
+                if detector:
+                    for repeticao in range(self.repeticoes):
+                        _, detecs, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo, detector)
+                        resultados.append({
+                            "serie": nome_serie,
+                            "modelo": nome_modelo,
+                            "repeticao": repeticao + 1,
+                            "mae": float(np.ravel(mae)[0]),
+                            "qtd_deteccoes": len(detecs)
+                        })
+                else:
+                    chave_cache = (nome_serie, nome_modelo)
+                    
+                    if is_deterministico and chave_cache in cache_modelos_deterministicos:
+                        mae = cache_modelos_deterministicos[chave_cache]
+                    else:
+                        _, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo)
+                        if is_deterministico:
+                            cache_modelos_deterministicos[chave_cache] = mae
+
+                    for repeticao in range(self.repeticoes):
+                        resultados.append({
+                            "serie": nome_serie,
+                            "modelo": nome_modelo,
+                            "repeticao": repeticao + 1,
+                            "mae": float(np.ravel(mae)[0]),
+                            "qtd_deteccoes": None
+                        })
+
+        return resultados
+    
+    
     def executar(self):
         """
         Executa cada modelo N vezes para cada uma das séries
         """
-        # variavel para salvar os resultados
         resultados = []
-        
-        # iterar sobre a quantidade de séries passadas
+                
+        modelos_deterministicos = {
+            "LinearRegressionModelo",
+            "KneighborsRegressorModelo",
+            "LassoRegressionModelo",
+            "RidgeRegressionModelo",
+            "SVRModelo"
+        }
+
         for nome_serie in self.series:
-            
-            # processando a serie antes de usar
             X, Y = self.preprocessar_serie(nome_serie)
 
-            # rodando modelo por modelo
             for modelo_cfg in self.modelos:
-                
-                # configurando a saida dos modelos
                 nome_modelo = modelo_cfg["nome"]
                 avaliador = modelo_cfg["avaliador"]
                 modelo = modelo_cfg["modelo"]
-                detector = modelo_cfg.get("detector")  # pode ser None
+                detector = modelo_cfg.get("detector")
 
                 print(f"Executando {nome_modelo} na série: {nome_serie}")
 
-                # rodando cada modelo N vezes
-                for repeticao in range(self.repeticoes):
-                    if detector:
-                        _, detecs, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo, detector)
-                        qtd_deteccoes = len(detecs)
-                    else:
-                        _, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo)
-                        qtd_deteccoes = None
+                is_deterministico = modelo.__name__ in modelos_deterministicos
 
-                    # formatando a linha para ser escrita
-                    resultados.append({
-                        "serie": nome_serie,
-                        "modelo": nome_modelo,
-                        "repeticao": repeticao + 1,
-                        "mae": float(np.ravel(mae)[0]),
-                        "qtd_deteccoes": qtd_deteccoes
-                    })
+                if is_deterministico:
+                   
+                    _, detecs, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo, detector)
+                    
+                    for repeticao in range(self.repeticoes):
+                        resultados.append({
+                            "serie": nome_serie,
+                            "modelo": nome_modelo,
+                            "repeticao": repeticao + 1,
+                            "mae": float(np.ravel(mae)[0]),
+                            "qtd_deteccoes": len(detecs)
+                        })
+                
+                elif detector:
+                  
+                    for repeticao in range(self.repeticoes):
+                        
+                        _, detecs, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo, detector)
+                        
+                        resultados.append({
+                            "serie": nome_serie,
+                            "modelo": nome_modelo,
+                            "repeticao": repeticao + 1,
+                            "mae": float(np.ravel(mae)[0]),
+                            "qtd_deteccoes": len(detecs)
+                        })
+
+                else: 
+
+                    _, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo)
+
+                    for repeticao in range(self.repeticoes):
+                        resultados.append({
+                            "serie": nome_serie,
+                            "modelo": nome_modelo,
+                            "repeticao": repeticao + 1,
+                            "mae": float(np.ravel(mae)[0]),
+                            "qtd_deteccoes": None
+                        })
 
         return resultados
+
+
     

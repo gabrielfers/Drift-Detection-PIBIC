@@ -1,8 +1,8 @@
 from sklearn.neural_network import MLPRegressor
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloAtivo
 from utils.FileManager import FileManager
 
-class MLPRegressorModelo(ModeloBase):
+class MLPRegressorModelo(ModeloAtivo):
     def __init__(self, **kwargs):
         super().__init__()
         

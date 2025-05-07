@@ -7,11 +7,3 @@ class DDMDetector(DetectorDriftBase):
         self.detector = DDM()
         self.name = "_DDM"
         self.threshold = threshold
-
-    def atualizar(self, erro):
-        erro_binario = 1 if erro > self.threshold else 0
-        self.detector.update(erro_binario)
-
-    @property
-    def drift_detectado(self):
-        return self.detector.drift_detected

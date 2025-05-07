@@ -1,12 +1,63 @@
-import yfinance as yf
-import numpy as np
 from river import preprocessing
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import time
+import os
 
 class SeriesProcessor:
     """
     Classe para processamento de séries temporais financeiras.
     """
 
+    @staticmethod
+    def carregar_serie_csv(nome_serie, pasta="series"):
+        """
+        Lê um arquivo CSV com dados de uma série temporal e retorna um array de fechamentos sem NaNs.
+
+        Args:
+            nome_serie: Nome do arquivo da série (sem extensão .csv)
+            pasta: Pasta onde os arquivos estão salvos
+
+        Returns:
+            np.ndarray com os valores de fechamento ajustado (float), sem NaNs
+        """
+        caminho = os.path.join(pasta, f"{nome_serie}.csv")
+
+        # Ignora as duas primeiras linhas e lê os dados
+        df = pd.read_csv(caminho, skiprows=2, names=["Date", "Close"])
+
+        # Remove valores NaN e retorna como array
+        return df["Close"].dropna().values.reshape(-1, 1)
+
+
+    @staticmethod
+    def baixar_e_salvar_series(series, pasta_destino="series", intervalo="1d"):
+        """
+        Baixa e salva os dados de fechamento ajustado de várias séries temporais.
+
+        Args:
+            series: Lista de símbolos do Yahoo Finance
+            pasta_destino: Nome da pasta onde os arquivos CSV serão salvos
+            intervalo: Intervalo dos dados ("1d", "1wk", "1mo", etc.)
+        """
+        os.makedirs(pasta_destino, exist_ok=True)
+
+        for symbol in series:
+            print(f"Baixando dados de {symbol}...")
+            try:
+                data = yf.download(symbol, period="max", interval=intervalo)
+                time.sleep(3)  # Espera 3 segundos entre os downloads
+                if not data.empty:
+                    nome_arquivo = symbol.replace('^', '').replace('=', '') + ".csv"
+                    caminho_arquivo = os.path.join(pasta_destino, nome_arquivo)
+                    data[["Close"]].to_csv(caminho_arquivo)
+                    print(f"Salvo em: {caminho_arquivo}")
+                else:
+                    print(f"Nenhum dado retornado para {symbol}.")
+            except Exception as e:
+                print(f"Erro ao baixar {symbol}: {e}")
+                
     @staticmethod
     def baixar_dados(symbol, periodo="5y", intervalo="1d"):
         """

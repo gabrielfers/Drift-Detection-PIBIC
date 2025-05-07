@@ -6,10 +6,3 @@ class ADWINDetector(DetectorDriftBase):
         super().__init__()
         self.detector = ADWIN()
         self.name = "_ADWIN"
-
-    def atualizar(self, erro):
-        self.detector.update(erro)
-
-    @property
-    def drift_detectado(self):
-        return self.detector.drift_detected

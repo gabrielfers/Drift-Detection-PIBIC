@@ -1,8 +1,8 @@
 from sklearn.linear_model import Ridge
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloAtivo
 from utils.FileManager import FileManager
 
-class RidgeRegressionModelo(ModeloBase):
+class RidgeRegressionModelo(ModeloAtivo):
     def __init__(self, **kwargs):
         super().__init__()
         
@@ -13,9 +13,3 @@ class RidgeRegressionModelo(ModeloBase):
             kwargs = FileManager.carregar_parametros_do_json(self.name)  # Usando o método da classe FileManager
             
         self.modelo = Ridge(**kwargs)
-
-    def treinar(self, X, y):
-        self.modelo.fit(X, y)
-
-    def prever(self, X):
-        return self.modelo.predict(X)
