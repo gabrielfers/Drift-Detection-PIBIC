@@ -1,56 +1,67 @@
 from sklearn.metrics import mean_absolute_error
+from dtaidistance import dtw
 from river import metrics
 import numpy as np
 import copy
 
-class DriftEvaluator:
-    """
-    Classe para avaliação e detecção de drift em séries temporais.
-    """
+class SmartWindow:
+    def __init__(self, modelo_classe, detector_classe, tamanho_batch, limiar):
+        self.modelo_classe = modelo_classe
+        self.detector_classe = detector_classe
+        self.tamanho_batch = tamanho_batch
+        self.limiar = limiar
     
-    @staticmethod
-    def inicializar_modelos(modelo_classe, detector_classe):
-        """
-        Inicializa instâncias de modelo e detector.
-
-        Args:
-            modelo_classe: Classe do modelo
-            detector_classe: Classe do detector de drift
-
-        Returns:
-            tuple: (modelo_instancia, detector_instancia)
-        """
+    def inicializar_modelos(self, X, y):
+                
+        ######################## inicializando o regressor ###########################
         # Instancia o modelo com os parâmetros fornecidos
-        modelo_instancia = copy.copy(modelo_classe())
+        self.modelo_atual = copy.copy(self.modelo_classe())
         
-        # Instancia o detector com os parâmetros fornecidos
-        detector_instancia = copy.copy(detector_classe())
-
-        return modelo_instancia, detector_instancia
-
-    @staticmethod
-    def treinamento_modelo_batch(modelo, X, y):
-        """
-        Treina um modelo em modo batch e calcula erro médio.
-
-        Args:
-            modelo: Instância do modelo a ser treinado
-            X: Dados de entrada
-            y: Valores alvo
-
-        Returns:
-            float: Erro médio de treinamento
-        """
         # Treinamento do modelo usando o método 'treinar' da subclasse
-        modelo.treinar(X, y)
+        self.modelo_atual.treinar(X, y)
 
         # Cálculo do erro médio (adapte para modelos online, se necessário)
-        erro_medio = mean_absolute_error(y, modelo.prever(X))
-      
-        return erro_medio
+        erro_medio = mean_absolute_error(y, self.modelo_atual.prever(X))
+        ###############################################################################
         
-    @staticmethod        
-    def prequential_batch(X, Y, tamanho_batch, modelo_classe, detector_classe):
+        
+        ######################## inicializando o detector #############################
+        # Instancia o detector com os parâmetros fornecidos
+        self.detector_atual = copy.copy(self.detector_classe())
+        
+        # atualizando o detector
+        self.detector_atual.atualizar(erro_medio)
+        ###############################################################################
+    
+    def inicializar_janelas(self, X, y):
+        self.fixed_window_X = copy.copy(X)
+        self.fixed_window_y = copy.copy(y)
+        
+        self.sliding_window_X = copy.copy(X)
+        self.sliding_window_y = copy.copy(y)
+        
+        self.increment_window_X = []
+        self.increment_window_y = []
+        
+    def deslizar_janela(self, x, y):
+        self.sliding_window_X = np.delete(self.sliding_window_X, 0, axis=0)
+        self.sliding_window_y = np.delete(self.sliding_window_y, 0, axis=0)
+        
+        self.sliding_window_X = np.append(self.sliding_window_X, [x], axis=0)
+        self.sliding_window_y = np.append(self.sliding_window_y, [y], axis=0)
+            
+    def incrementar_janela(self, x, y):
+        self.increment_window_X.append(x)
+        self.increment_window_y.append(y)
+    
+    def comparar_janelas(self):
+        # Calcula a distância DTW total entre a janela fixa e a deslizante
+        distance, _ = dtw.warping_paths(self.fixed_window_y, self.sliding_window_y)
+        
+        # Retorna a distância geral (custo total)
+        return distance
+        
+    def prequential(self, X, Y):
         """
         Realiza a previsão de valores continuamente, detectando mudanças nos dados (drift)
         e retreinando o modelo quando necessário.
@@ -70,23 +81,19 @@ class DriftEvaluator:
         predicoes, erros, deteccoes = [], [], []
         mae = metrics.MAE()
 
-
-        ### inicializacao do modelo e detector
-        modelo, detector = DriftEvaluator.inicializar_modelos(modelo_classe, detector_classe)
-        detector.atualizar(DriftEvaluator.treinamento_modelo_batch(modelo, X[:tamanho_batch], Y[:tamanho_batch]))
-        
-        
+        # inicializacao do modelo
+        self.inicializar_modelos(X[:self.tamanho_batch], Y[:self.tamanho_batch])
+        self.inicializar_janelas(X[:self.tamanho_batch], Y[:self.tamanho_batch])
+                
         ### variavel de controle
         drift_ativo = False
 
-
         ### processamento da stream
-        for i in range(tamanho_batch, len(X)):
+        for i in range(self.tamanho_batch, len(X)):
             
-                
             # recebimento do dado de entrada e computacao da previsao
             entrada = X[i].reshape(1, -1)
-            y_pred = modelo.prever(entrada)
+            y_pred = self.modelo_atual.prever(entrada)
             erro = mean_absolute_error(Y[i], y_pred)
 
 
@@ -95,151 +102,36 @@ class DriftEvaluator:
             erros.append(erro)
             mae.update(Y[i][0], y_pred[0])
 
-
             # atualizando o detector
             if not drift_ativo:
-                detector.atualizar(erro)
-
+                self.detector_atual.atualizar(erro)
+                
+                # deslizando a janela sobre os dados
+                self.deslizar_janela(X[i], Y[i])
 
             # verificando se tem drift
-            if detector.drift_detectado() and not drift_ativo:
+            if self.detector_atual.drift_detectado() and not drift_ativo:
                 deteccoes.append(i)
-                #print(f"\nMudança detectada no índice {i}, começando a coletar dados para retreino...")
+                diferenca = self.comparar_janelas() 
                 drift_ativo = True
-                janela_X, janela_y = [], []
-
-
+        
             # ativando a estrategia de adaptacao ao drift
             if drift_ativo:
-                janela_X.append(X[i])
-                janela_y.append(Y[i])
-
-                if len(janela_X) >= tamanho_batch:
-                    #print(f"Janela completa com {len(janela_X)} amostras. Retreinado com dados do índice {i - tamanho_batch} até {i}.")
+                
+                if diferenca < self.limiar:
+                    
                     drift_ativo = False
-
-                    # realizando o reset do modelo e do detector
-                    modelo, detector = DriftEvaluator.inicializar_modelos(modelo_classe, detector_classe)
-                    erro_inicial = DriftEvaluator.treinamento_modelo_batch(modelo, np.array(janela_X), np.array(janela_y))
-                    detector.atualizar(erro_inicial)
-
-        #print("Modelo utilizado:", modelo)
-        #print("Detector utilizado:", detector)
-        #print("Detecções:", deteccoes)
-        #print(f"MAE Modelo Batch: {mae.get()}")
-        
+                    self.inicializar_modelos(self.sliding_window_X, self.sliding_window_y)
+                    self.inicializar_janelas(self.sliding_window_X, self.sliding_window_y)
+                    
+                else:
+                    self.incrementar_janela(X[i], Y[i])
+                    
+                    if(len(self.increment_window_X)  >= self.tamanho_batch):
+                        
+                        drift_ativo = False
+                        self.inicializar_modelos(self.increment_window_X, self.increment_window_y)
+                        self.inicializar_janelas(self.increment_window_X, self.increment_window_y)
+                        
         return [float(p.flatten()[0]) for p in predicoes], deteccoes, mae.get()
     
-    @staticmethod
-    def prequential_passivo(X, Y, tamanho_batch, modelo_classe):
-        """
-        Realiza a previsão de valores continuamente para algoritmos online,
-        sem detecção de drift e retreinamento.
-
-        Args:
-            X: Dados de entrada.
-            Y: Dados de saída.
-            tamanho_batch: Tamanho do batch para treinamento inicial.
-            modelo_classe: Classe do modelo a ser usado (subclasse de ModeloBase).
-            
-        Returns:
-            predicoes: Lista de previsões.
-        """
-        
-        ### variaveis de retorno
-        predicoes, erros = [], []
-        mae = metrics.MAE()
-
-
-        # inicializacao do modelo
-        modelo = modelo_classe()
-        modelo.treinar(X[:tamanho_batch], Y[:tamanho_batch])
-        
-
-        ### processamento da stream
-        for i in range(tamanho_batch, len(X)):
-            
-            
-            # recebimento do dado de entrada e computacao da previsao
-            y_pred = modelo.prever([X[i]])
-            erro = mean_absolute_error(Y[i], np.array([y_pred]))
-
-
-            # salvando os resultados
-            predicoes.append(y_pred)
-            mae.update(Y[i][0], y_pred)
-            erros.append(erro)
-
-
-            # computando o aprendizado online
-            modelo.treinar([X[i]], [Y[i]])
-
-        
-        #print("Modelo utilizado:", modelo)
-        #print(f"MAE Modelo Online: {mae.get()}")
-        return [float(p.flatten()[0]) for p in np.asarray(predicoes)], mae.get()
-        
-    @staticmethod
-    def prequential_online_com_drift(X, Y, tamanho_batch, modelo_classe, detector_classe):
-        """
-        Realiza a previsão de valores continuamente para algoritmos online,
-        sem detecção de drift e retreinamento.
-
-        Args:
-            X: Dados de entrada.
-            Y: Dados de saída.
-            tamanho_batch: Tamanho do batch para treinamento inicial.
-            modelo_classe: Classe do modelo a ser usado (subclasse de ModeloBase).
-            
-        Returns:
-            predicoes: Lista de previsões.
-        """
-        
-        ### variaveis de retorno
-        predicoes, erros, deteccoes = [], [], []
-        mae = metrics.MAE()
-
-        # inicializacao do modelo
-        modelo, detector = DriftEvaluator.inicializar_modelos(modelo_classe, detector_classe)
-        detector.atualizar(DriftEvaluator.treinamento_modelo_batch(modelo, X[:tamanho_batch], Y[:tamanho_batch]))
-        
-        # Controle de janela de atualização após drift
-        drift_ativo = False
-        qtd_dados = 0
-
-        ### processamento da stream
-        for i in range(tamanho_batch, len(X)):
-            
-            # recebimento do dado de entrada e computacao da previsao
-            y_pred = modelo.prever([X[i]])
-            erro = mean_absolute_error(Y[i], np.array([y_pred]))
-
-            # salvando os resultados
-            predicoes.append(y_pred)
-            mae.update(Y[i][0], y_pred)
-            erros.append(erro)
-            
-            # Atualiza o detector
-            if not drift_ativo:
-                detector.atualizar(erro)
-            else:
-                qtd_dados += 1
-
-            # Verifica detecção de drift
-            if detector.drift_detectado() and not drift_ativo:
-                deteccoes.append(i)
-                drift_ativo = True
-                
-            # Se estiver em modo de atualização, coleta dados
-            if drift_ativo and qtd_dados >= tamanho_batch:
-                drift_ativo = False
-                detector = copy.copy(detector_classe())
-                qtd_dados = 0
-                
-            # computando o aprendizado online
-            modelo.treinar([X[i]], [Y[i]])
-
-        
-        #print("Modelo utilizado:", modelo)
-        #print(f"MAE Modelo Online: {mae.get()}")
-        return [float(p.flatten()[0]) for p in np.asarray(predicoes)], deteccoes, mae.get()
