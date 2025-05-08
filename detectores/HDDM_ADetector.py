@@ -8,9 +8,3 @@ class HDDM_ADetector(DetectorDriftBase):
         self.detector = HDDM_A()
         self.name = "_HDDMa"
 
-    def atualizar(self, erro):
-        self.detector.update(erro)
-
-    @property
-    def drift_detectado(self):
-        return self.detector.drift_detected

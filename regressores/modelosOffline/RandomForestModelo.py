@@ -1,8 +1,8 @@
 from sklearn.ensemble import RandomForestRegressor
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloAtivo
 from utils.FileManager import FileManager
 
-class RandomForestModelo(ModeloBase):
+class RandomForestModelo(ModeloAtivo):
     def __init__(self, **kwargs):
         super().__init__()
         
@@ -13,9 +13,3 @@ class RandomForestModelo(ModeloBase):
             kwargs = FileManager.carregar_parametros_do_json(self.name)  # Usando o método da classe FileManager
 
         self.modelo = RandomForestRegressor(**kwargs)
-
-    def treinar(self, X, y):
-        self.modelo.fit(X, y)
-
-    def prever(self, X):
-        return self.modelo.predict(X)

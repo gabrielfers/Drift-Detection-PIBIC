@@ -1,8 +1,8 @@
 from sklearn.svm import SVR
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloAtivo
 from utils.FileManager import FileManager
 
-class SVRModelo(ModeloBase):
+class SVRModelo(ModeloAtivo):
     def __init__(self, **kwargs):
         super().__init__()
         
@@ -13,9 +13,3 @@ class SVRModelo(ModeloBase):
             kwargs = FileManager.carregar_parametros_do_json(self.name)  # Usando o método da classe FileManager
 
         self.modelo = SVR(**kwargs)
-
-    def treinar(self, X, y):
-        self.modelo.fit(X, y)
-
-    def prever(self, X):
-        return self.modelo.predict(X)

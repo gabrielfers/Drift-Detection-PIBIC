@@ -1,17 +1,8 @@
 from river import linear_model
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloPassivo
 
-class LinearRegressionOnlineModelo(ModeloBase):
+class LinearRegressionOnlineModelo(ModeloPassivo):
     def __init__(self):
         super().__init__()
         self.modelo = linear_model.LinearRegression()
         self.name = "LR_Online"
-
-    def treinar(self, X, y):
-        for j in range(len(X)):
-            X_dict = {f"t{i+1}": value for i, value in enumerate(X[j])}
-            self.modelo.learn_one(X_dict, y[j][0])
-
-    def prever(self, X):
-        X_dict = {f"t{j+1}": value for j, value in enumerate(X[0])}
-        return self.modelo.predict_one(X_dict)

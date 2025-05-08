@@ -1,8 +1,8 @@
 from sklearn.linear_model import Lasso
-from regressores.ModeloBase import ModeloBase
+from regressores.ModeloBase import ModeloAtivo
 from utils.FileManager import FileManager
 
-class LassoRegressionModelo(ModeloBase):
+class LassoRegressionModelo(ModeloAtivo):
     def __init__(self, **kwargs):
         super().__init__()
         
@@ -14,8 +14,3 @@ class LassoRegressionModelo(ModeloBase):
 
         self.modelo = Lasso(**kwargs)
 
-    def treinar(self, X, y):
-        self.modelo.fit(X, y)
-
-    def prever(self, X):
-        return self.modelo.predict(X)

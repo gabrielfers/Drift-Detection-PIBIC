@@ -10,7 +10,7 @@ parametros_otimizados.json
 *.png
 
 # Ignorar arquivos CSV
-*.csv
+#*.csv
 
 venv/
 

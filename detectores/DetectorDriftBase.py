@@ -1,14 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 class DetectorDriftBase(ABC):
     def __init__(self):
         pass
 
-    @abstractmethod
     def atualizar(self, erro):
-        pass
+        self.detector.update(erro)
 
-    @property
-    @abstractmethod
     def drift_detectado(self):
-        pass
+        return self.detector.drift_detected
