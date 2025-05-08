@@ -48,7 +48,7 @@ class Experimento:
 
                 is_deterministico = modelo.__name__ in modelos_deterministicos
 
-                if is_deterministico:
+                if is_deterministico and detector:
                    
                     _, detecs, mae = avaliador.executar_avaliacao(X, Y, self.tamanho_batch, modelo, detector)
                     
@@ -61,7 +61,7 @@ class Experimento:
                             "qtd_deteccoes": len(detecs)
                         })
                 
-                elif detector:
+                elif not is_deterministico and detector:
                   
                     for repeticao in range(self.repeticoes):
                         
