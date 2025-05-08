@@ -106,7 +106,7 @@ class FrameLiedson(AvaliadorDriftBase):
 
         if len(self.pool) < self.len_pool:
             self.pool.append(modelo)
-            modelo.treinar(self.janela_X, self.janela_y)
+            
         else:
 
             # Avaliar erros dos modelos no pool
@@ -120,7 +120,6 @@ class FrameLiedson(AvaliadorDriftBase):
             # Se o modelo novo for melhor, substitui o pior
             if erro_novo < pior_erro:
                 self.pool[pior_idx] = modelo
-                modelo.treinar(self.janela_X, self.janela_y)
 
     def popular_pool(self, x, y):
 
@@ -219,7 +218,7 @@ class FrameLiedson(AvaliadorDriftBase):
                     drift_ativo = False
                     # ALTEREI AQUI
                     self.modelo_atual.treinar(janela_X, janela_y)
-                    self.ativar_modelo_backup(X[:tamanho_batch], Y[:tamanho_batch])
+                    self.ativar_modelo_backup(janela_X, janela_y)
 
 
         #print("Modelo utilizado:", modelo)
