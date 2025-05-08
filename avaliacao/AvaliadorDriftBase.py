@@ -17,7 +17,7 @@ class AvaliadorBatch(AvaliadorDriftBase):
 class AvaliadorPassivo(AvaliadorDriftBase):
     def prequential(self, X, Y, tamanho_batch, modelo_classe, detector_classe=None):
         return DriftEvaluator.prequential_passivo(X, Y, tamanho_batch, modelo_classe)
-    
-class AvaliadorFramework(AvaliadorDriftBase):
+
+class AvaliadorPassivoDrift(AvaliadorDriftBase):
     def prequential(self, X, Y, tamanho_batch, modelo_classe, detector_classe):
         return DriftEvaluator.prequential_online_com_drift(X, Y, tamanho_batch, modelo_classe, detector_classe)

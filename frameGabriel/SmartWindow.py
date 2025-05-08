@@ -1,14 +1,14 @@
+from avaliacao.AvaliadorDriftBase import AvaliadorDriftBase
 from sklearn.metrics import mean_absolute_error
 from dtaidistance import dtw
 from river import metrics
 import numpy as np
 import copy
 
-class SmartWindow:
-    def __init__(self, modelo_classe, detector_classe, tamanho_batch, limiar):
+class SmartWindow(AvaliadorDriftBase):
+    def __init__(self, modelo_classe, detector_classe, limiar):
         self.modelo_classe = modelo_classe
         self.detector_classe = detector_classe
-        self.tamanho_batch = tamanho_batch
         self.limiar = limiar
     
     def inicializar_modelos(self, X, y):
@@ -61,7 +61,7 @@ class SmartWindow:
         # Retorna a distância geral (custo total)
         return distance
         
-    def prequential(self, X, Y):
+    def prequential(self, X, Y, tamanho_batch, model_classe=None, detect_classe=None):
         """
         Realiza a previsão de valores continuamente, detectando mudanças nos dados (drift)
         e retreinando o modelo quando necessário.
@@ -82,14 +82,14 @@ class SmartWindow:
         mae = metrics.MAE()
 
         # inicializacao do modelo
-        self.inicializar_modelos(X[:self.tamanho_batch], Y[:self.tamanho_batch])
-        self.inicializar_janelas(X[:self.tamanho_batch], Y[:self.tamanho_batch])
+        self.inicializar_modelos(X[:tamanho_batch], Y[:tamanho_batch])
+        self.inicializar_janelas(X[:tamanho_batch], Y[:tamanho_batch])
                 
         ### variavel de controle
         drift_ativo = False
 
         ### processamento da stream
-        for i in range(self.tamanho_batch, len(X)):
+        for i in range(tamanho_batch, len(X)):
             
             # recebimento do dado de entrada e computacao da previsao
             entrada = X[i].reshape(1, -1)
@@ -127,7 +127,7 @@ class SmartWindow:
                 else:
                     self.incrementar_janela(X[i], Y[i])
                     
-                    if(len(self.increment_window_X)  >= self.tamanho_batch):
+                    if(len(self.increment_window_X)  >= tamanho_batch):
                         
                         drift_ativo = False
                         self.inicializar_modelos(self.increment_window_X, self.increment_window_y)

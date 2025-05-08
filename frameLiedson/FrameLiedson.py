@@ -1,9 +1,10 @@
+from avaliacao.AvaliadorDriftBase import AvaliadorDriftBase
 from sklearn.metrics import mean_absolute_error
 from river import metrics
 import numpy as np
 import copy
 
-class FrameLiedson:
+class FrameLiedson(AvaliadorDriftBase):
     def __init__(self, modelo_classe, detector_classe, len_pool, len_add):
         self.modelo_classe = modelo_classe
         self.detector_classe = detector_classe
@@ -128,7 +129,7 @@ class FrameLiedson:
                 self.modelo_atual = copy.copy(modelo)
                 performance_base = performance
                       
-    def prequential(self, X, Y, tamanho_batch):
+    def prequential(self, X, Y, tamanho_batch, model_classe=None, detect_classe=None):
         """
         Realiza a previsão de valores continuamente para algoritmos online,
         sem detecção de drift e retreinamento.
