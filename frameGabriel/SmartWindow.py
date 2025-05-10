@@ -42,6 +42,9 @@ class SmartWindow(AvaliadorDriftBase):
         
         self.increment_window_X = []
         self.increment_window_y = []
+
+        #ADICIONADO O LIMIAR ADAPTATIVO
+        self.limiar_adaptativo = np.std(self.fixed_window_y) * self.limiar
         
     def deslizar_janela(self, x, y):
         self.sliding_window_X = np.delete(self.sliding_window_X, 0, axis=0)
@@ -57,9 +60,11 @@ class SmartWindow(AvaliadorDriftBase):
     def comparar_janelas(self):
         # Calcula a distância DTW total entre a janela fixa e a deslizante
         distance, _ = dtw.warping_paths(self.fixed_window_y, self.sliding_window_y)
-        
+
+        #ADICIONADO
         # Retorna a distância geral (custo total)
-        return distance
+        amplitude = np.max(self.fixed_window_y) - np.min(self.fixed_window_y)
+        return distance / (amplitude + 1e-10)
         
     def prequential(self, X, Y, tamanho_batch, model_classe=None, detect_classe=None):
         """
@@ -117,8 +122,8 @@ class SmartWindow(AvaliadorDriftBase):
         
             # ativando a estrategia de adaptacao ao drift
             if drift_ativo:
-                
-                if diferenca < self.limiar:
+                # AGORA COMPARA COM O LIMIAR ADAPTATIVO
+                if diferenca < self.limiar_adaptativo:
                     
                     drift_ativo = False
                     self.inicializar_modelos(self.sliding_window_X, self.sliding_window_y)
