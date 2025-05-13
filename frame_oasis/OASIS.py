@@ -4,7 +4,7 @@ from river import metrics
 import numpy as np
 import copy
 
-class FrameLiedson(AvaliadorDriftBase):
+class OASIS(AvaliadorDriftBase):
     def __init__(self, modelo_classe, detector_classe, len_pool, len_add):
         self.modelo_classe = modelo_classe
         self.detector_classe = detector_classe
