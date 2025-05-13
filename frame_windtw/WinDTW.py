@@ -5,11 +5,13 @@ from river import metrics
 import numpy as np
 import copy
 
-class SmartWindow(AvaliadorDriftBase):
-    def __init__(self, modelo_classe, detector_classe, limiar):
+class WinDTW(AvaliadorDriftBase):
+    def __init__(self, modelo_classe, detector_classe, n_std, n_subsamples=5, n_sliding_size=50):
         self.modelo_classe = modelo_classe
         self.detector_classe = detector_classe
-        self.limiar = limiar
+        self.n_subsamples = n_subsamples
+        self.n_sliding_size = n_sliding_size
+        self.n_std = n_std
     
     def inicializar_modelos(self, X, y):
                 
@@ -43,6 +45,69 @@ class SmartWindow(AvaliadorDriftBase):
         self.increment_window_X = []
         self.increment_window_y = []
         
+        self.definir_limiar()
+    
+    def definir_limiar_old(self):
+        
+        # definindo o indice máximo que a janela deslizante pode chegar
+        max_start = len(self.fixed_window_y) - self.n_sliding_size
+        
+        # var para salvar os exemplos de series
+        samples = []
+        
+        # gerando varias sub series para definir o limiar
+        for _ in range(self.n_subsamples):
+            
+            # definindo o inicio aleatorio
+            start = np.random.randint(0, max_start)
+            
+            # gerando a subserie
+            subwindow = self.fixed_window_y[start:start + self.n_sliding_size]
+            
+            # calculando a distancia da subserie para a serie fixa
+            dist = dtw.distance(self.fixed_window_y, subwindow)
+            
+            # salvando as series
+            samples.append(dist)
+
+        # gerando o limiar
+        self.distances = np.array(samples)
+        self.min_distances = np.min(self.distances)
+        self.mean_distances = np.mean(self.distances)
+        self.std_distances = np.std(self.distances)
+        
+    def definir_limiar(self):
+        
+        # definindo o passo para deslizar a janela
+        window_length = len(self.fixed_window_y)
+        step = (window_length - self.n_sliding_size) // (self.n_subsamples - 1)
+        
+        # var para salvar os exemplos de series
+        samples = []
+
+        for i in range(self.n_subsamples):
+            
+            # definindo o inicio e fim
+            start = i * step
+            end = start + self.n_sliding_size
+            
+            # Evita janelas incompletas
+            if end > window_length:
+                break  
+            
+            # definindo a subjanela
+            subwindow = self.fixed_window_y[start:end]
+            
+            # calculando e salvando a distancia
+            dist = dtw.distance(self.fixed_window_y, subwindow)
+            samples.append(dist)
+
+        # gerando o limiar
+        self.distances = np.array(samples)
+        self.min_distances = np.min(self.distances)
+        self.mean_distances = np.mean(self.distances)
+        self.std_distances = np.std(self.distances)
+           
     def deslizar_janela(self, x, y):
         self.sliding_window_X = np.delete(self.sliding_window_X, 0, axis=0)
         self.sliding_window_y = np.delete(self.sliding_window_y, 0, axis=0)
@@ -54,13 +119,24 @@ class SmartWindow(AvaliadorDriftBase):
         self.increment_window_X.append(x)
         self.increment_window_y.append(y)
     
-    def comparar_janelas(self):
+    def distancia_entre_janelas(self):
         # Calcula a distância DTW total entre a janela fixa e a deslizante
         distance, _ = dtw.warping_paths(self.fixed_window_y, self.sliding_window_y)
         
         # Retorna a distância geral (custo total)
         return distance
+    
+    def comparar_janelas(self):
         
+        dist = self.distancia_entre_janelas()
+
+        if dist > self.min_distances + self.n_std * self.std_distances:
+            status = 'drift'
+        else:
+            status = 'normal'
+            
+        return status
+       
     def prequential(self, X, Y, tamanho_batch, model_classe=None, detect_classe=None):
         """
         Realiza a previsão de valores continuamente, detectando mudanças nos dados (drift)
@@ -112,19 +188,20 @@ class SmartWindow(AvaliadorDriftBase):
             # verificando se tem drift
             if self.detector_atual.drift_detectado() and not drift_ativo:
                 deteccoes.append(i)
-                diferenca = self.comparar_janelas() 
+                status = self.comparar_janelas() 
                 drift_ativo = True
         
             # ativando a estrategia de adaptacao ao drift
             if drift_ativo:
                 
-                if diferenca < self.limiar:
+                if status == 'normal':
                     
                     drift_ativo = False
                     self.inicializar_modelos(self.sliding_window_X, self.sliding_window_y)
                     self.inicializar_janelas(self.sliding_window_X, self.sliding_window_y)
                     
-                else:
+                elif status == 'drift':
+                    
                     self.incrementar_janela(X[i], Y[i])
                     
                     if(len(self.increment_window_X)  >= tamanho_batch):
